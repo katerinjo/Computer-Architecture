@@ -7,10 +7,21 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.IM = 0
+        self.IS = 0
+        self.SP = 0
+        self.PC = 0 # program counter
+
+    def ram_read(self, MAR):
+        return self.ram[MAR]
+
+    def ram_write(self, MAR, MDR):
+        self.ram[MAR] = MDR
 
     def load(self):
-        """Load a program into memory."""
+        """Load a program into ram."""
 
         address = 0
 
@@ -47,12 +58,12 @@ class CPU:
         """
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
-            self.pc,
+            self.PC,
             #self.fl,
             #self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
+            self.ram_read(self.PC),
+            self.ram_read(self.PC + 1),
+            self.ram_read(self.PC + 2)
         ), end='')
 
         for i in range(8):
@@ -62,4 +73,20 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        for n in range(16):
+            IR = self.ram[self.PC]
+
+            arity_bits = f'{IR:08b}'[:2]
+            arity = int(arity_bits, 2)
+            next_start = self.PC + arity + 1
+            args = self.ram[self.PC + 1: next_start]
+
+            if IR == 0x01: # HLT Halt
+                quit()
+            elif IR == 0x82: # LDI load value B into register A
+                self.ram[args[0]] = args[1]
+            elif IR == 0x47: # PRN Print
+                print(self.ram[args[0]])
+
+            self.PC = next_start
+
