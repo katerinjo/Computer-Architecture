@@ -11,7 +11,7 @@ class CPU:
         self.reg = [0] * 8
         self.IM = 0
         self.IS = 0
-        self.SP = 255
+        self.SP = 256
         self.PC = 0 # program counter
 
     def ram_read(self, MAR):
@@ -48,10 +48,10 @@ class CPU:
 
         if op == 0xA0: # ADD
             self.reg[reg_a] += self.reg[reg_b]
-        if op == 0xA2: # MUL
+        elif op == 0xA2: # MUL
             self.reg[reg_a] *= self.reg[reg_b]
         else:
-            raise Exception("Unsupported ALU operation")
+            raise Exception(f"Unsupported ALU operation: {op:X}")
 
     def trace(self):
         """
@@ -59,7 +59,7 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
+        print(f"TRACE: Loc: %02X Vals: %02X %02X %02X  RegVals:" % (
             self.PC,
             #self.fl,
             #self.ie,
@@ -71,10 +71,16 @@ class CPU:
         for i in range(8):
             print(" %02X" % self.reg[i], end='')
 
+        print()
+        print('RAM', *[hex(val)[2:] for val in self.ram[:25]])
+        print('STACK', self.ram[self.SP:])
+
 
     def run(self):
         """Run the CPU."""
         while True:
+            # self.trace()
+            # print()
             IR = self.ram[self.PC]
 
             arity = IR >> 6
@@ -88,10 +94,13 @@ class CPU:
             else:
                 {
                     0x01: self.HLT,
-                    0x82: self.LDI,
-                    0x47: self.PRN,
+                    0x11: self.RET,
                     0x45: self.PUSH,
                     0x46: self.POP,
+                    0x47: self.PRN,
+                    0x50: self.CALL,
+                    0x54: self.JUMP,
+                    0x82: self.LDI,
                 }[IR](*args)
 
             if not sets_pc:
@@ -101,11 +110,9 @@ class CPU:
     def HLT():
         quit()
 
-    def LDI(self, register, val): # Load value B into register A
-        self.reg[register] = val
-
-    def PRN(self, register): # Print
-        print(self.reg[register])
+    def RET(self):
+        self.PC = self.ram[self.SP]
+        self.SP += 1
 
     def PUSH(self, register): # Push onto stack
         self.SP -= 1
@@ -114,6 +121,21 @@ class CPU:
     def POP(self, register): # Pop from stack
         self.reg[register] = self.ram[self.SP]
         self.SP += 1
+
+    def PRN(self, register): # Print
+        print(self.reg[register])
+
+    def CALL(self, register): # Call subroutine
+        # self.PUSH(self.PC + 2)
+        self.SP -= 1
+        self.ram[self.SP] = self.PC + 2
+        self.PC = self.reg[register]
+
+    def JUMP(self, register): # Jump to address given by register
+        self.PC = self.reg[register]
+
+    def LDI(self, register, val): # Load value B into register A
+        self.reg[register] = val
 
     def MUL(self, valA, valB):
         self.alu('MUL', valA, valB)
