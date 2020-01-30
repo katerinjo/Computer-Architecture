@@ -45,8 +45,6 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
-        print(op, reg_a, reg_b)
-        print(self.reg[reg_a], self.reg[reg_b])
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
@@ -79,20 +77,29 @@ class CPU:
         while True:
             IR = self.ram[self.PC]
 
-            # arity_bits = f'{IR:08b}'[:2]
-            # arity = int(arity_bits, 2)
             arity = IR >> 6
             next_start = self.PC + arity + 1
             args = self.ram[self.PC + 1: next_start]
 
-            if IR == 0x01: # HLT Halt
-                quit()
-            elif IR == 0x82: # LDI load value B into register A
-                self.reg[args[0]] = args[1]
-            elif IR == 0x47: # PRN Print
-                print(self.reg[args[0]])
-            elif IR == 0xA2: # MUL Multiply value in A by value in B
-                self.alu('MUL', *args)
+            {
+                0x01: self.HLT,
+                0x82: self.LDI,
+                0x47: self.PRN,
+                0xA2: self.MUL,
+            }[IR](*args)
 
             self.PC = next_start
+
+    @staticmethod
+    def HLT():
+        quit()
+
+    def LDI(self, register, val): # Load value B into register A
+        self.reg[register] = val
+
+    def PRN(self, register): # Print
+        print(self.reg[register])
+
+    def MUL(self, valA, valB):
+        self.alu('MUL', valA, valB)
 
