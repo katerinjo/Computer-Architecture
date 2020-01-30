@@ -11,7 +11,7 @@ class CPU:
         self.reg = [0] * 8
         self.IM = 0
         self.IS = 0
-        self.SP = 0
+        self.SP = 255
         self.PC = 0 # program counter
 
     def ram_read(self, MAR):
@@ -85,6 +85,8 @@ class CPU:
                 0x01: self.HLT,
                 0x82: self.LDI,
                 0x47: self.PRN,
+                0x45: self.PUSH,
+                0x46: self.POP,
                 0xA2: self.MUL,
             }[IR](*args)
 
@@ -99,6 +101,14 @@ class CPU:
 
     def PRN(self, register): # Print
         print(self.reg[register])
+
+    def PUSH(self, register): # Push onto stack
+        self.SP -= 1
+        self.ram[self.SP] = self.reg[register]
+
+    def POP(self, register): # Pop from stack
+        self.reg[register] = self.ram[self.SP]
+        self.SP += 1
 
     def MUL(self, valA, valB):
         self.alu('MUL', valA, valB)
