@@ -46,9 +46,9 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
+        if op == 0xA0: # ADD
             self.reg[reg_a] += self.reg[reg_b]
-        if op == "MUL":
+        if op == 0xA2: # MUL
             self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
@@ -78,19 +78,24 @@ class CPU:
             IR = self.ram[self.PC]
 
             arity = IR >> 6
+            use_alu = IR >> 5 & 1
+            sets_pc = IR >> 4 & 1
             next_start = self.PC + arity + 1
             args = self.ram[self.PC + 1: next_start]
 
-            {
-                0x01: self.HLT,
-                0x82: self.LDI,
-                0x47: self.PRN,
-                0x45: self.PUSH,
-                0x46: self.POP,
-                0xA2: self.MUL,
-            }[IR](*args)
+            if use_alu:
+                self.alu(IR, *args)
+            else:
+                {
+                    0x01: self.HLT,
+                    0x82: self.LDI,
+                    0x47: self.PRN,
+                    0x45: self.PUSH,
+                    0x46: self.POP,
+                }[IR](*args)
 
-            self.PC = next_start
+            if not sets_pc:
+                self.PC = next_start
 
     @staticmethod
     def HLT():
