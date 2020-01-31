@@ -8,11 +8,33 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 256
-        self.reg = [0] * 8
-        self.IM = 0
-        self.IS = 0
-        self.SP = 256
+        self.reg = [0] * 7 + [256]
         self.PC = 0 # program counter
+        self.FL = 0
+
+    @property
+    def IM(self):
+        return self.reg[5]
+
+    @IM.setter
+    def IM(self, val):
+        self.reg[5] = val
+
+    @property
+    def IS(self):
+        return self.reg[6]
+
+    @IS.setter
+    def IS(self, val):
+        self.reg[6] = val
+
+    @property
+    def SP(self):
+        return self.reg[7]
+
+    @SP.setter
+    def SP(self, val):
+        self.reg[7] = val
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -99,7 +121,7 @@ class CPU:
                     0x46: self.POP,
                     0x47: self.PRN,
                     0x50: self.CALL,
-                    0x54: self.JUMP,
+                    0x54: self.JMP,
                     0x82: self.LDI,
                 }[IR](*args)
 
@@ -131,7 +153,7 @@ class CPU:
         self.ram[self.SP] = self.PC + 2
         self.PC = self.reg[register]
 
-    def JUMP(self, register): # Jump to address given by register
+    def JMP(self, register): # Jump to address given by register
         self.PC = self.reg[register]
 
     def LDI(self, register, val): # Load value B into register A
