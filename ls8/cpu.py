@@ -72,6 +72,14 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == 0xA2: # MUL
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == 0xA7: # CMP
+            self.FL = self.FL & 0b11111000 # clear comparison bits
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.FL += 0b100
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.FL += 0b010
+            else:
+                self.FL += 0b001
         else:
             raise Exception(f"Unsupported ALU operation: {op:X}")
 
@@ -122,6 +130,7 @@ class CPU:
                     0x47: self.PRN,
                     0x50: self.CALL,
                     0x54: self.JMP,
+                    0x55: self.JEQ,
                     0x82: self.LDI,
                 }[IR](*args)
 
@@ -155,6 +164,12 @@ class CPU:
 
     def JMP(self, register): # Jump to address given by register
         self.PC = self.reg[register]
+
+    def JEQ(self, register): # Jump to address given by register if equal flag
+        if self.FL & 1:
+            self.PC = self.reg[register]
+        else:
+            self.PC += 2
 
     def LDI(self, register, val): # Load value B into register A
         self.reg[register] = val
