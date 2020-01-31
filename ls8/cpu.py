@@ -131,6 +131,7 @@ class CPU:
                     0x50: self.CALL,
                     0x54: self.JMP,
                     0x55: self.JEQ,
+                    0x56: self.JNE,
                     0x82: self.LDI,
                 }[IR](*args)
 
@@ -170,6 +171,12 @@ class CPU:
             self.PC = self.reg[register]
         else:
             self.PC += 2
+
+    def JNE(self, register): # Jump if not equal flag
+        if self.FL & 1:
+            self.PC += 2
+        else:
+            self.PC = self.reg[register]
 
     def LDI(self, register, val): # Load value B into register A
         self.reg[register] = val
